@@ -45,7 +45,10 @@ const generateHexagon = () => ({
 });
 
 const getHexagon = () => {
-  const hexagon = localStorage?.getItem("hexagon");
+  const hexagon =
+    typeof localStorage === "undefined"
+      ? null
+      : localStorage.getItem("hexagon");
   return hexagon
     ? (JSON.parse(hexagon) as ReturnType<typeof generateHexagon>)
     : generateHexagon();
@@ -69,7 +72,7 @@ export default function Home() {
 
   // save to local storage
   useEffect(() => {
-    localStorage?.setItem("hexagon", JSON.stringify(hexagon));
+    localStorage.setItem("hexagon", JSON.stringify(hexagon));
   }, [hexagon]);
 
   return (
