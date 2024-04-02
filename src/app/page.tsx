@@ -1,112 +1,190 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+
+const levels = 7;
+const triangleSize = 40;
+const halfTriangleSize = triangleSize / 2;
+const height = halfTriangleSize * Math.sqrt(3);
+
+type TriangleProps = {
+  up: boolean;
+  x: number;
+  y: number;
+  color: string;
+  onClick: () => void;
+};
+
+const downPoints = (x = 0, y = 0) =>
+  `${x},${y} ${x + halfTriangleSize},${y + height} ${x - halfTriangleSize},${
+    y + height
+  }`;
+const upPoints = (x = 0, y = 0) =>
+  `${x - halfTriangleSize},${y} ${x + halfTriangleSize},${y} ${x},${
+    y + height
+  }`;
+
+function Triangle({ up, x, y, color, onClick }: TriangleProps) {
+  return (
+    <polygon
+      points={up ? upPoints(x, y) : downPoints(x, y)}
+      fill={color || "lightgray"}
+      onClick={onClick}
+      style={{ cursor: "pointer" }}
+      stroke="white"
+      strokeWidth={2}
+    />
+  );
+}
+
+const generateHexagon = () => ({
+  slices: Array.from({ length: 6 }).map(() => ({
+    levels: Array.from({ length: levels }).map((_, level) => ({
+      tiles: Array.from({ length: level * 2 + 1 }).map(() => ""),
+    })),
+  })),
+});
+
+const getHexagon = () => {
+  const hexagon = localStorage.getItem("hexagon");
+  return hexagon
+    ? (JSON.parse(hexagon) as ReturnType<typeof generateHexagon>)
+    : generateHexagon();
+};
+
+const COLORS = {
+  GOLD: "#edbe62",
+  BLACK: "#4a4246",
+  WHITE: "#f0e6da",
+};
 
 export default function Home() {
+  const availableColors = [
+    [COLORS.GOLD, COLORS.BLACK],
+    [COLORS.BLACK, COLORS.WHITE],
+    [COLORS.WHITE, COLORS.BLACK],
+  ];
+  const [currentColor, setCurrentColor] = useState(availableColors[0][0]);
+  const [symmetryMode, setSymmetryMode] = useState(false);
+  const [hexagon, setHexagon] = useState(getHexagon());
+
+  // save to local storage
+  useEffect(() => {
+    localStorage.setItem("hexagon", JSON.stringify(hexagon));
+  }, [hexagon]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main
+      className="flex min-h-screen flex-col items-center justify-between pt-12"
+      style={{ color: COLORS.BLACK }}
+    >
+      <h1 className="text-3xl font-bold text-center tracking-tight leading-10">
+        tile designer
+      </h1>
+      <p>
+        for kiwico's{" "}
+        <a
+          style={{
+            textDecoration: "underline",
+            textDecorationColor: COLORS.GOLD,
+          }}
+          href="https://www.kiwico.com/us/store/dp/geometric-tiled-tray-project-kit/3854"
+          target="_blank"
+        >
+          geometric tiled tray
+        </a>{" "}
+        kit
+      </p>
+      {/* color chooser */}
+      <div className="flex items-center justify-center space-x-4">
+        <div className="flex items-center gap-1">
+          <div>mirror mode:</div>
+          <button
+            onClick={() => setSymmetryMode((s) => !s)}
+            className={`w-14 h-8 rounded-full border-2 ${
+              symmetryMode ? "border-white shadow-lg" : "border-grey"
+            } shadow`}
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            {symmetryMode ? "ON" : "OFF"}
+          </button>
         </div>
+        {availableColors.map((color) => (
+          <button
+            key={color[0]}
+            onClick={() => setCurrentColor(color[0])}
+            className={`w-14 h-8 rounded-full border-2 transition-all ${
+              color[0] === currentColor
+                ? "border-white shadow-lg"
+                : "border-grey"
+            } drop-shadow-sm decoration-white`}
+            style={{ backgroundColor: color[0], color: color[1] }}
+          >
+            {
+              //  count all colors
+              hexagon.slices
+                .map((slice) => {
+                  return slice.levels
+                    .map((level) => {
+                      return level.tiles
+                        .map((tile) => {
+                          return tile === color[0];
+                        })
+                        .filter(Boolean).length;
+                    })
+                    .reduce((a, b) => a + b, 0);
+                })
+                .reduce((a, b) => a + b, 0)
+            }
+          </button>
+        ))}
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="max-w-5xl w-full items-center justify-between font-mono text-sm flex flex-col">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="-300 -250 600 500"
+          className="bg-white rounded shadow-sm"
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+          <g id="hexagon">
+            {hexagon.slices.map((slice, i) => {
+              return (
+                <g key={`slice-${i}`} transform={`rotate(${i * 60})`}>
+                  {slice.levels.map((level, j) => {
+                    const rowWidthOffset = -halfTriangleSize * j;
+                    return level.tiles.map((_, k) => (
+                      <Triangle
+                        key={`triangle-${i}-${j}-${k}`}
+                        up={k % 2 !== 0}
+                        x={rowWidthOffset + halfTriangleSize * k}
+                        y={height * j}
+                        color={hexagon.slices[i].levels[j].tiles[k]}
+                        onClick={() => {
+                          setHexagon((h) => ({
+                            ...h,
+                            slices: h.slices.map((slice, si) => {
+                              if (!symmetryMode && si !== i) return slice;
+                              return {
+                                ...slice,
+                                levels: slice.levels.map((l, li) => {
+                                  if (li !== j) return l;
+                                  return {
+                                    ...l,
+                                    tiles: l.tiles.map((t, ti) => {
+                                      if (ti !== k) return t;
+                                      return currentColor;
+                                    }),
+                                  };
+                                }),
+                              };
+                            }),
+                          }));
+                        }}
+                      />
+                    ));
+                  })}
+                </g>
+              );
+            })}
+          </g>
+        </svg>
       </div>
     </main>
   );
