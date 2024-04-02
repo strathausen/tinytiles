@@ -76,10 +76,7 @@ export default function Home() {
   }, [hexagon]);
 
   return (
-    <main
-      className="flex min-h-screen flex-col items-center justify-between pt-12"
-      style={{ color: COLORS.BLACK }}
-    >
+    <main className="flex min-h-screen flex-col items-center justify-between pt-12">
       <h1 className="text-3xl font-bold text-center tracking-tight leading-10">
         tile designer
       </h1>
