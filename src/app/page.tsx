@@ -69,7 +69,7 @@ export default function Home() {
 
   // save to local storage
   useEffect(() => {
-    localStorage.setItem("hexagon", JSON.stringify(hexagon));
+    localStorage?.setItem("hexagon", JSON.stringify(hexagon));
   }, [hexagon]);
 
   return (
