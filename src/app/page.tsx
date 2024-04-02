@@ -45,7 +45,7 @@ const generateHexagon = () => ({
 });
 
 const getHexagon = () => {
-  const hexagon = localStorage.getItem("hexagon");
+  const hexagon = localStorage?.getItem("hexagon");
   return hexagon
     ? (JSON.parse(hexagon) as ReturnType<typeof generateHexagon>)
     : generateHexagon();
