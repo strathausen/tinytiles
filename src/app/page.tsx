@@ -114,7 +114,7 @@ export default function Home() {
             className={`w-14 h-8 rounded-full border-2 transition-all ${
               color[0] === currentColor
                 ? "border-white shadow-lg"
-                : "border-grey"
+                : ""
             } drop-shadow-sm decoration-white`}
             style={{ backgroundColor: color[0], color: color[1] }}
           >
