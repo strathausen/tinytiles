@@ -81,7 +81,7 @@ export default function Home() {
         tile designer
       </h1>
       <p>
-        for kiwico's{" "}
+        for kiwico&apos;s{" "}
         <a
           style={{
             textDecoration: "underline",
